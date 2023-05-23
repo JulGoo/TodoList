@@ -17,6 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.ViewHolder>{
 
@@ -93,6 +95,12 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.ViewHolder>{
         return todoList.size();
     }
 
+    //이이템 순서 변경
+    public void onItemMove(int fromposition, int toposition) {
+        Collections.swap(todoList, fromposition, toposition);
+        notifyItemMoved(fromposition, toposition);
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder{
 
         CheckBox mCheckBox;
@@ -103,4 +111,5 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.ViewHolder>{
             mCheckBox = itemView.findViewById(R.id.m_check_box);
         }
     }
+
 }

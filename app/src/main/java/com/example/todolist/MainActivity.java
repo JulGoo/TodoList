@@ -9,6 +9,8 @@ import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -21,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -47,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
     //할일 ID
     int gId;
+
+    private ItemTouchHelper itemTouchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +183,8 @@ public class MainActivity extends AppCompatActivity {
                         AlertDialog.Builder builder = new AlertDialog.Builder(recyclerView.getContext());
                         builder.setTitle("삭제할까요?");
                         builder.setMessage("영구적으로 삭제됩니다.");
+                        //다이얼로그 외부 클릭 시 작동 안하도록 설정
+                        builder.setCancelable(false);
 
                         //삭제에 빨간색 적용
                         String positiveButtonText = "삭제";
@@ -249,6 +256,33 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attachToRecyclerView(recyclerView);
 
+        // ItemTouchHelper.Callback 객체 생성
+        ItemTouchHelper.Callback callback = new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                // 드래그 및 스와이프 방향 설정
+                int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                int swipeFlags = 0; // 여기서는 스와이프 기능을 사용하지 않으므로 0으로 설정
+                return makeMovementFlags(dragFlags, swipeFlags);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder source, @NonNull RecyclerView.ViewHolder target) {
+                // 아이템의 순서 변경 처리
+                adapter.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // 스와이프 기능을 사용하지 않으므로 구현하지 않음
+            }
+        };
+
+        // ItemTouchHelper 객체 생성 및 RecyclerView에 연결
+        itemTouchHelper = new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
     }//onCreate
 
     //데이터 조회
@@ -310,6 +344,44 @@ public class MainActivity extends AppCompatActivity {
 
         //키보드 숨김
         manager.hideSoftInputFromWindow(editText.getApplicationWindowToken(), 0);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //메뉴 리소스 파일을 인플레이트해 액션바에 표시
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        //선택된 메뉴 항목 처리
+        int id = item.getItemId();
+        if (id == R.id.action_help){
+            //도움말 로고 클릭 시 처리 로직
+            showPopup();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("※도움말※");
+
+        builder.setMessage("\n▶ 수정         : 왼쪽으로 밀기\n▶ 삭제         : 오른쪽으로 밀기\n▶ 순서 변경 : 꾹 누르고 위아래로 드래그\n");
+
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //팝업창 닫기
+                dialog.dismiss();
+            }
+        });
+
+        //다이얼로그 표시
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 }//MainActivity
